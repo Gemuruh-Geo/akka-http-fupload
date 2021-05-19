@@ -6,7 +6,7 @@ import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model.{Multipart, StatusCodes}
 import akka.http.scaladsl.model.Multipart.FormData.BodyPart
 import akka.http.scaladsl.server.Directives._
-import akka.stream.scaladsl.FileIO
+import akka.stream.scaladsl.{FileIO, Sink}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -18,8 +18,6 @@ import spray.json.DefaultJsonProtocol._
  */
 class FileUpload (implicit val system: ActorSystem[_]){
   implicit val ec = system.executionContext
-
-
   case class responseMessage(code: String, message: String)
   implicit val responseFormat = jsonFormat2(responseMessage)
 
