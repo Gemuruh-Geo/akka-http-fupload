@@ -6,6 +6,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import scala.util.{Failure, Success}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
+import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 /**
  * @author Gemuruh Geo Pratama
@@ -28,6 +29,7 @@ object Main extends App {
     }
   }
   implicit val system = ActorSystem[Nothing](Behaviors.empty, "HelloAkkaHttpServer")
-  val route = new FileUpload().uploadVideo
+  val config = ConfigFactory.load("application.conf")
+  val route = new RouteFileUpload(config).uploadFile
   startHttpServer(route)
 }
