@@ -3,19 +3,15 @@ package com.geo.fu
 import java.io.File
 
 import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.model.{Multipart, StatusCodes}
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.FormData.BodyPart
 import akka.http.scaladsl.server.Directives._
-import akka.stream.scaladsl.{FileIO, Sink}
+import com.typesafe.config.Config
+import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import spray.json.DefaultJsonProtocol._
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.unmarshalling.PredefinedFromStringUnmarshallers
-import com.typesafe.config.Config
 
 /**
  * @author Gemuruh Geo Pratama
@@ -42,8 +38,6 @@ class RouteFileUpload(config: Config)(implicit val system: ActorSystem[_]){
                     val file = new File("/Users/gemuruhgeopratama/Desktop/testfile/"+filename)
                     system.log.info(file.toPath.toString)
                     val minioSink = new MinioSink(folderName,filename, config)
-                    /*b.entity.dataBytes.runWith(FileIO.toPath(file.toPath)).map(_ =>
-                      (b.name -> file))*/
 
                     b.entity.dataBytes.runWith(minioSink)
                     Future {"00"->"SUCCESS"}
