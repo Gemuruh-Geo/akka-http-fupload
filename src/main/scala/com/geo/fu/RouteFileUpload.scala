@@ -35,10 +35,7 @@ class RouteFileUpload(config: Config)(implicit val system: ActorSystem[_]){
               case b: BodyPart if b.name == "cdnFiles" =>
                 b.filename match {
                   case Some(filename) => {
-                    val file = new File("/Users/gemuruhgeopratama/Desktop/testfile/"+filename)
-                    system.log.info(file.toPath.toString)
                     val minioSink = new MinioSink(folderName,filename, config)
-
                     b.entity.dataBytes.runWith(minioSink)
                     Future {"00"->"SUCCESS"}
                   }
