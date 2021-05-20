@@ -1,11 +1,10 @@
 package com.geo.fu
 
 import com.typesafe.config.Config
-import io.minio.messages.Item
-import io.minio.{BucketExistsArgs, ListObjectsArgs, MinioClient, Result}
+import io.minio.{BucketExistsArgs, ListObjectsArgs, MinioClient}
 import org.slf4j.LoggerFactory
-import scala.jdk.CollectionConverters._
 
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 /**
@@ -14,7 +13,6 @@ import scala.util.Try
  */
 class MinioGetObjectList(config: Config) {
   val log = LoggerFactory.getLogger(getClass)
-  case class ResponseObjectList(code: String, message: String)
 
   def getObjectList(id: Long, folderType: String): Try[ResponseObjectList] = Try{
     val bucketName = config.getString("minio.bucket-name")
@@ -29,11 +27,18 @@ class MinioGetObjectList(config: Config) {
     found match {
       case false => {
         log.info("Object not found")
-        ResponseObjectList("10","Object Not Found")
+        ResponseObjectList("10","Object Not Found", None)
       }
       case _ => {
         log.info("Start To Fetch Object List")
-        val iterableObjectList = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).prefix(folderType).recursive(true).build()).asScala
+        val prefix = s"$folderType/$id/"
+        val objectLisName = minioClient.listObjects(
+          ListObjectsArgs
+            .builder()
+            .bucket(bucketName)
+            .prefix(prefix)
+            .recursive(true).build()).asScala.map[String](v=>v.get().objectName()).toList
+        ResponseObjectList("00","SUCCESS", Option[List[String]](objectLisName))
       }
     }
   }

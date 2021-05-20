@@ -10,12 +10,12 @@ import org.slf4j.LoggerFactory
  * @author Gemuruh Geo Pratama
  * @created 19/05/2021-10:36 AM
  */
-class MinioSink(folderName: Option[String], fileName: String, config: Config) extends GraphStage[SinkShape[ByteString]]{
+class MinioSink(folderName: String, fileName: String, config: Config, id: String) extends GraphStage[SinkShape[ByteString]]{
 
   val log = LoggerFactory.getLogger(getClass)
   val in: Inlet[ByteString] = Inlet.create("MinioSink.in")
 
-  val minioFileUpload = new MinioFileUpload(folderName,fileName, config)
+  val minioFileUpload = new MinioFileUpload(folderName,fileName, config, id)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
     new GraphStageLogic(shape) {

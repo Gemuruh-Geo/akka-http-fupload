@@ -1,17 +1,19 @@
 package com.geo.fu
 
-import java.io.File
-
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.FormData.BodyPart
 import akka.http.scaladsl.server.Directives._
 import com.typesafe.config.Config
-import spray.json.DefaultJsonProtocol._
+
+import scala.util.Failure
+import spray.json._
+import DefaultJsonProtocol._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.Success
 
 /**
  * @author Gemuruh Geo Pratama
@@ -21,13 +23,12 @@ class RouteFileUpload(config: Config)(implicit val system: ActorSystem[_]){
   implicit val ec = system.executionContext
   case class responseMessage(code: String, message: String)
   implicit val responseFormat = jsonFormat2(responseMessage)
-
-
+  implicit val responseGetObjectList = jsonFormat3(ResponseObjectList)
 
   val uploadFile =
-    path("api" / "cdn-upload") {
-      parameters("folderName".optional) {
-        (folderName) =>
+    concat(path("api" / "cdn-upload") {
+      parameters("folderType", "id") {
+        (folderType, id) =>
           entity(as[Multipart.FormData]) { formData =>
 
             val allPartsF: Future[Map[String, Any]] = formData.parts.mapAsync[(String, Any)](1) {
@@ -35,7 +36,7 @@ class RouteFileUpload(config: Config)(implicit val system: ActorSystem[_]){
               case b: BodyPart if b.name == "cdnFiles" =>
                 b.filename match {
                   case Some(filename) => {
-                    val minioSink = new MinioSink(folderName,filename, config)
+                    val minioSink = new MinioSink(folderType,filename, config, id)
                     b.entity.dataBytes.runWith(minioSink)
                     Future {"00"->"SUCCESS"}
                   }
@@ -61,5 +62,18 @@ class RouteFileUpload(config: Config)(implicit val system: ActorSystem[_]){
             }
           }
       }
-    }
+    },
+      path("api" / "cdn-get-datalist") {
+        get{
+          parameters("folderType", "id") {
+            (folderType, id) => {
+              val minioGetObjectList = new MinioGetObjectList(config)
+              minioGetObjectList.getObjectList(id.toLong, folderType) match {
+                case Success(data) => complete(data)
+                case Failure(_) => complete(ResponseObjectList("10","Failed",None))
+              }
+            }
+          }
+        }
+    })
 }

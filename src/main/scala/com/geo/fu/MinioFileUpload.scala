@@ -13,7 +13,7 @@ import scala.util.Try
  * @author Gemuruh Geo Pratama
  * @created 19/05/2021-11:21 AM
  */
-class MinioFileUpload( folderName: Option[String], fileName: String, config: Config) {
+class MinioFileUpload( folderType: String, fileName: String, config: Config, id: String) {
   val log = LoggerFactory.getLogger(getClass)
   def doUploadToMinio(byteString: ByteString): Try[String] = Try{
     val bucketName = config.getString("minio.bucket-name")
@@ -30,10 +30,7 @@ class MinioFileUpload( folderName: Option[String], fileName: String, config: Con
       import io.minio.MakeBucketArgs
       minioClient.makeBucket(MakeBucketArgs.builder.bucket(bucketName).build)
     }
-    val objectName = folderName match {
-      case Some(fName) => s"$fName/$fileName"
-      case None => fileName
-    }
+    val objectName = s"$folderType/$id/$fileName"
     import io.minio.PutObjectArgs
     val inputStream = new ByteArrayInputStream(byteString.toArray)
     minioClient.putObject(PutObjectArgs.builder.bucket(bucketName).`object`(objectName)
